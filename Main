@@ -1,0 +1,40 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+digits = pd.read_csv('/kaggle/input/datasets/rakuraku678/mnist-60000-hand-written-number-images/mnist_train.csv')
+
+y = digits.iloc[:, 0]     # [all rows, first column]
+X = digits.iloc[:, 1:]    # [all rows, second column -> ...]
+
+X = X / 255.0             # normalize (颜色的数值是0-255，X/255 可以让数值保持在0-1之中)
+
+X_train, X_val, y_train, y_val = train_test_split(X, y, random_state=0)
+
+model = RandomForestClassifier(random_state=0)
+model.fit(X_train, y_train)
+
+preds = model.predict(X_val)
+print("Accuracy:", accuracy_score(y_val, preds))
+
+img = cv2.imread('/kaggle/input/datasets/kevin16009/digit-3-handwriting/Screenshot 2026-03-17 at 11.50.41PM.png')
+
+# ============================================
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) # Colour to gray
+img_resized = cv2.resize(gray, (28, 28))     # resize 成 MNIST 格式
+img_resized = 255 - img_resized              # 反转颜色（MNIST 是黑底白字）
+img_resized = img_resized / 255.0            # normalize
+img_flat = img_resized.reshape(1, -1)        # flatten (把矩阵从28x28变成1x784(变成只有一行))
+# ============================================
+
+prediction = model.predict(img_flat)
+print("Prediction:", prediction[0])
+
+# === 可视化 ===
+plt.imshow(img_resized, cmap='gray')
+plt.title("Model Input")
+plt.show()
